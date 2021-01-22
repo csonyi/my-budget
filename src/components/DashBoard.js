@@ -15,9 +15,6 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
   },
-  fixedHeight: {
-    height: 120,
-  },
 }));
 
 export default function DashBoard(props) {
