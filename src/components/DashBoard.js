@@ -1,10 +1,4 @@
-import {
-  Container,
-  Grid,
-  makeStyles,
-  Paper,
-  Typography,
-} from "@material-ui/core";
+import { Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import clsx from "clsx";
 import React from "react";
 
@@ -21,18 +15,11 @@ export default function DashBoard(props) {
   const classes = useStyles();
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
   return (
-    <Container maxWidth="lg">
-      <Grid container spacing={3}>
-        <Paper className={classes.paper}>
-          <Typography>asdasdasd</Typography>
-        </Paper>
-        <Paper className={classes.paper}>
-          <Typography>asdasdasd</Typography>
-        </Paper>
-        <Paper className={classes.paper}>
-          <Typography>asdasdasd</Typography>
-        </Paper>
+    <Grid container direction="column">
+      <Grid item>Header</Grid>
+      <Grid item container>
+        <Grid item xs={12}></Grid>
       </Grid>
-    </Container>
+    </Grid>
   );
 }

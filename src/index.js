@@ -10,12 +10,15 @@ import { ThemeProvider } from "@material-ui/core/styles";
 
 import MyBudget from "./MyBudget";
 import theme from "./theme";
+import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
   <React.StrictMode>
     <CssBaseLine />
     <ThemeProvider theme={theme}>
-      <MyBudget />
+      <BrowserRouter>
+        <MyBudget />
+      </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>,
   document.getElementById("root")
