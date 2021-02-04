@@ -10,22 +10,15 @@ import Transactions from "./components/Transactions";
 
 import AccountData from "./datamodels/account-model";
 import TransactionData from "./datamodels/transaction-model";
-import CurrencyHandler from "./datamodels/currency-model";
 
 const localStorageKey = "my-budget-state";
 const defaultState = {
   accounts: [AccountData.defaultAccountData],
-  balances: [
-    AccountData.defaultAccountData.balance +
-      " " +
-      AccountData.defaultAccountData.symbol,
-  ],
   transactions: [
     new TransactionData(5000, "HUF", "00000000-0000-0000-0000-000000000000"),
   ],
   drawerOpen: false,
 };
-const currencyHandler = new CurrencyHandler();
 
 const styles = (theme) => ({
   content: {
@@ -46,41 +39,33 @@ class MyBudget extends React.Component {
     super(props);
     const locallySavedState = JSON.parse(localStorage.getItem(localStorageKey));
     this.state = locallySavedState || defaultState;
+    if (locallySavedState !== null) {
+      const locallySavedAccounts = locallySavedState.accounts;
+      const locallySavedTransactions = locallySavedState.transactions;
+      this.state.accounts = locallySavedAccounts.map((account) =>
+        AccountData.fromAccountObject(account)
+      );
+      this.state.transactions = locallySavedTransactions.map((transaction) =>
+        TransactionData.fromTransactionObject(transaction)
+      );
+    }
   }
 
-  // TODO: Move balance to its own component
   updateState(newState) {
     this.setState(newState, () => {
-      localStorage.setItem(localStorageKey, JSON.stringify(this.state));
-      this.setState((state) => ({
-        balances: state.accounts
-          .reduce((currencies, currentAcc) => {
-            if (currencies.indexOf(currentAcc.currency) === -1) {
-              currencies.push(currentAcc.currency);
-            }
-            return currencies;
-          }, [])
-          .map(
-            (currency) =>
-              state.accounts.reduce(
-                (sum, currentAcc) =>
-                  currentAcc.currency === currency
-                    ? sum + currentAcc.balance
-                    : sum,
-                0
-              ) +
-              " " +
-              AccountData.getCurrencySymbol(currency)
-          ),
-      }));
+      this.saveStateLocally();
     });
   }
 
-  addAccount = (name, initialBalance, currency) => {
+  saveStateLocally() {
+    localStorage.setItem(localStorageKey, JSON.stringify(this.state));
+  }
+
+  addAccount = (name, initialBalance, currencyId) => {
     this.updateState({
       accounts: [
         ...this.state.accounts,
-        new AccountData(name, parseFloat(initialBalance), currency),
+        new AccountData(name, parseFloat(initialBalance), currencyId),
       ],
     });
   };
@@ -93,7 +78,7 @@ class MyBudget extends React.Component {
     editedAccount.editAccount({
       name: account.name,
       balance: parseFloat(account.balance) || 0,
-      currency: account.currency,
+      currencyId: account.currencyId,
     });
     const firstPart = this.state.accounts.slice(0, editedAccountIndex);
     const secondPart = this.state.accounts.slice(editedAccountIndex + 1);
@@ -111,9 +96,9 @@ class MyBudget extends React.Component {
     });
   };
 
-  addTransaction = (amount, currency, accountId, date) => {
+  addTransaction = (amount, currencyId, accountId, date) => {
     const transactions = this.state.transactions;
-    transactions.push(new TransactionData(amount, currency, accountId, date));
+    transactions.push(new TransactionData(amount, currencyId, accountId, date));
     this.updateState({
       transactions: transactions,
     });
@@ -126,7 +111,7 @@ class MyBudget extends React.Component {
     let editedTransactionIndex = this.state.transactions.indexOf(
       editedTransaction
     );
-    editedTransaction.editedTransaction(transaction);
+    editedTransaction.editTransaction(transaction);
     const firstPart = this.state.transactions.slice(0, editedTransactionIndex);
     const secondPart = this.state.transactions.slice(
       editedTransactionIndex + 1
@@ -141,7 +126,7 @@ class MyBudget extends React.Component {
       (transaction) => transaction.id !== uuid
     );
     this.updateState({
-      transaction: filteredTransactions,
+      transactions: filteredTransactions,
     });
   };
 
@@ -156,7 +141,6 @@ class MyBudget extends React.Component {
     return (
       <div>
         <MyAppBar
-          balances={this.state.balances}
           onDrawerToggle={this.onDrawerToggle}
           isDrawerOpen={this.state.drawerOpen}
         />
