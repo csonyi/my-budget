@@ -17,11 +17,11 @@ export default function Transactions(props) {
   return (
     <Grid container direction="row" spacing={1}>
       <Switch>
-        <Route path="/transactions/day/:date">
-          <TransactionsDayView {...viewProps} />
-        </Route>
         <Route path="/transactions/week/:weekNumber">
           <TransactionsWeekView {...viewProps} />
+        </Route>
+        <Route path="/transactions">
+          <TransactionsDayView {...viewProps} />
         </Route>
       </Switch>
     </Grid>
