@@ -10,6 +10,10 @@ import Grid from "@material-ui/core/Grid";
 import TextField from "@material-ui/core/TextField";
 
 import { NIL as defaultId } from "uuid";
+import CurrencySelector from "./CurrencySelector";
+
+import CurrencyHandler from "../datamodels/currency-model";
+const currencyHandler = CurrencyHandler.instance;
 
 const cardStyle = {
   minHeight: "250px",
@@ -22,7 +26,7 @@ class Account extends React.Component {
   }
 
   AccountContent = (props) => {
-    let { name, balance, currency } = this.props.accountData;
+    let { name, balance, currencyId } = this.props.accountData;
     return this.state.editMode ? (
       <Grid container component="form" direction="column">
         <Grid item xs={12}>
@@ -42,23 +46,22 @@ class Account extends React.Component {
           />
         </Grid>
         <Grid item xs={12}>
-          <TextField
-            name="currency"
-            placeholder="Currency"
-            value={currency}
+          <CurrencySelector
+            name="currencyId"
+            value={currencyId}
             onChange={this.handleChange}
           />
         </Grid>
       </Grid>
     ) : (
-      this.props.accountData.balance + " " + this.props.accountData.symbol
+      balance + " " + currencyHandler.getSymbol(currencyId)
     );
   };
 
   handleChange = (e) => {
     const updatedAccount = {
       ...this.props.accountData,
-      [e.currentTarget.name]: e.currentTarget.value,
+      [e.target.name]: e.target.value,
     };
     this.props.updateAccount(updatedAccount);
   };
@@ -71,13 +74,14 @@ class Account extends React.Component {
   };
 
   render() {
+    let { id, name, balance, currencyId } = this.props.accountData;
     return (
       <Card raised style={cardStyle}>
         <CardHeader
-          title={
-            this.state.editMode ? "Edit Account" : this.props.accountData.name
+          title={this.state.editMode ? "Edit Account" : name}
+          subheader={
+            this.state.editMode ? "" : currencyHandler.getName(currencyId)
           }
-          subheader={this.state.editMode ? "" : this.props.accountData.currency}
           color="primary"
         />
         <CardContent component="h1">
@@ -87,16 +91,10 @@ class Account extends React.Component {
           <Button onClick={this.handleEdit}>
             {this.state.editMode ? "Save" : "Edit"}
           </Button>
-          {this.props.accountData.id === defaultId ? (
+          {id === defaultId ? (
             ""
           ) : (
-            <Button
-              onClick={() =>
-                this.props.removeAccount(this.props.accountData.id)
-              }
-            >
-              Remove
-            </Button>
+            <Button onClick={() => this.props.removeAccount(id)}>Remove</Button>
           )}
         </CardActions>
       </Card>
@@ -110,7 +108,7 @@ class NewAccount extends React.Component {
     this.state = {
       name: "",
       initialBalance: "",
-      currency: "",
+      currencyId: "",
     };
   }
 
@@ -126,19 +124,19 @@ class NewAccount extends React.Component {
     if (
       this.state.name === "" ||
       this.state.initialBalance === "" ||
-      this.state.currency === ""
+      this.state.currencyId === ""
     ) {
       return;
     }
     this.props.addAccount(
       this.state.name,
       this.state.initialBalance,
-      this.state.currency
+      this.state.currencyId
     );
     this.setState({
       name: "",
       initialBalance: "",
-      currency: "",
+      currencyId: "",
     });
   };
 
@@ -166,10 +164,9 @@ class NewAccount extends React.Component {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                name="currency"
-                placeholder="Currency"
-                value={this.state.currency}
+              <CurrencySelector
+                name="currencyId"
+                value={this.state.currencyId}
                 onChange={this.handleChange}
               />
             </Grid>
