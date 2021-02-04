@@ -47,11 +47,6 @@ const useStyles = makeStyles((theme) => ({
 
 function MyAppBar(props) {
   const classes = useStyles();
-  const [balance, setBalance] = React.useState(0);
-
-  const handleBalanceSelect = (e) => {
-    setBalance(e.target.value);
-  };
 
   return (
     <AppBar
@@ -74,26 +69,6 @@ function MyAppBar(props) {
         </IconButton>
         <Typography variant="h6" className={classes.title} noWrap>
           MyBudget
-        </Typography>
-        <Typography variant="h6">
-          Balance:
-          <FormControl>
-            <Select
-              displayEmpty
-              className={classes.select}
-              value={balance}
-              onChange={handleBalanceSelect}
-            >
-              {props.balances.map((balance) => (
-                <MenuItem
-                  key={props.balances.indexOf(balance)}
-                  value={props.balances.indexOf(balance)}
-                >
-                  {balance}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </Typography>
       </Toolbar>
     </AppBar>
