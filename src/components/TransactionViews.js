@@ -10,11 +10,8 @@ import {
   FormControl,
   FormControlLabel,
   Grid,
-  InputLabel,
   makeStyles,
-  MenuItem,
   Paper,
-  Select,
   TextField,
   Typography,
 } from "@material-ui/core";
@@ -24,7 +21,11 @@ import AddIcon from "@material-ui/icons/Add";
 import RemoveIcon from "@material-ui/icons/Remove";
 
 import clsx from "clsx";
-import AccountData from "../datamodels/account-model";
+
+import CurrencyHandler from "../datamodels/currency-model";
+import AccountSelector from "./AccountSelector";
+import CurrencySelector from "./CurrencySelector";
+const currencyHandler = CurrencyHandler.instance;
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -43,69 +44,107 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export const Transaction = (props) => {
-  let transactionData = props.transaction;
+  let transaction = props.transaction;
+  const transactionCurrency = currencyHandler.getCurrency(
+    transaction.currencyId
+  );
   const [editMode, setEditMode] = React.useState(false);
-  const [checked, setChecked] = React.useState(false);
+  const [checked, setChecked] = React.useState(transaction.completed);
+  const [accountId, setAccountId] = React.useState(transaction.accountId);
+  const [amount, setAmount] = React.useState(transaction.amount);
   const classes = useStyles();
 
-  const accountList = props.accounts.map((account) => (
-    <MenuItem key={account.id} value={account.id}>
-      {account.name}
-    </MenuItem>
-  ));
-
-  const handleClick = (e) => {
+  const handleEdit = (e) => {
     setEditMode(!editMode);
+    if (editMode) {
+      props.updateTransaction(transaction);
+    }
+  };
+
+  const handleRemove = () => {
+    props.removeTransaction(transaction.id);
   };
 
   const handleCheck = (e) => {
     e.stopPropagation();
+    props.transaction.completed = !checked;
     setChecked(!checked);
-    transactionData.completed = checked;
+    props.updateTransaction(transaction);
+  };
+
+  const handleAccountChange = (e) => {
+    setAccountId(e.target.value);
+    transaction.accountId = e.target.value;
+    props.updateTransaction(transaction);
+  };
+
+  const handleAmountChange = (e) => {
+    setAmount(e.target.value);
+    transaction.amount = e.target.value;
+    props.updateTransaction(transaction);
   };
 
   return (
     <Accordion
       component="form"
       className={clsx(classes.accordion, {
-        [transactionData.amount >= 0]: classes.income,
-        [transactionData.amount < 0]: classes.expense,
+        [amount >= 0]: classes.income,
+        [amount < 0]: classes.expense,
       })}
     >
       <AccordionSummary expandIcon={<MoreVertIcon />}>
         <FormControlLabel
           onClick={handleCheck}
           onFocus={(e) => e.stopPropagation()}
-          control={<Checkbox />}
+          control={<Checkbox checked={checked} />}
           label={
             editMode ? (
-              <TextField value={transactionData.amount} />
+              <TextField
+                type="number"
+                onChange={handleAmountChange}
+                onClick={(e) => e.stopPropagation()}
+                value={amount}
+              />
             ) : (
-              (transactionData.amount >= 0 ? "+" : "") +
-              transactionData.amount +
-              AccountData.getCurrencySymbol(transactionData.currency)
+              (transaction.amount >= 0 ? "+" : "") +
+              transaction.amount +
+              " " +
+              currencyHandler.getSymbol(transaction.currencyId)
             )
           }
         />
       </AccordionSummary>
       <AccordionDetails>
         {editMode ? (
-          <FormControl>
-            <Select value={transactionData.accountId} children={accountList} />
-          </FormControl>
+          <AccountSelector
+            name="accountId"
+            value={accountId}
+            accounts={props.accounts}
+            onChange={handleAccountChange}
+          />
         ) : (
-          <Typography>
-            Account:{" "}
-            {
-              props.accounts.find(
-                (account) => account.id === transactionData.accountId
-              ).name
-            }
-          </Typography>
+          <Grid container direction="column">
+            <Grid item>
+              <Typography>
+                Account:
+                {" " +
+                  props.accounts.find((account) => account.id === accountId)
+                    .name}
+              </Typography>
+            </Grid>
+            <Grid item>
+              <Typography>
+                Currency:
+                {" " + transactionCurrency.currencyName} (
+                {transactionCurrency.id})
+              </Typography>
+            </Grid>
+          </Grid>
         )}
       </AccordionDetails>
       <AccordionActions>
-        <Button onClick={handleClick}>{editMode ? "Save" : "Edit"}</Button>
+        <Button onClick={handleEdit}>{editMode ? "Save" : "Edit"}</Button>
+        <Button onClick={handleRemove}>Remove</Button>
       </AccordionActions>
     </Accordion>
   );
@@ -113,14 +152,31 @@ export const Transaction = (props) => {
 
 export const NewTransaction = (props) => {
   const classes = useStyles();
-  const accountList = props.accounts.map((account) => (
-    <MenuItem
-      key={props.accounts.indexOf(account)}
-      value={props.accounts.indexOf(account)}
-    >
-      {account.name}
-    </MenuItem>
-  ));
+
+  const [amount, setAmount] = React.useState();
+  const [accountId, setAccountId] = React.useState("");
+  const [currencyId, setCurrencyId] = React.useState("");
+
+  const handleAmountChange = (e) => {
+    setAmount(e.target.value);
+  };
+
+  const handleAccountChange = (e) => {
+    setAccountId(e.target.value);
+  };
+
+  const handleCurrencyChange = (e) => {
+    setCurrencyId(e.target.value);
+  };
+
+  const handleClick = () => {
+    props.addTransaction(
+      props.expense ? -Math.abs(amount) : amount,
+      currencyId,
+      accountId
+    );
+  };
+
   return (
     <Accordion className={classes.paper}>
       <AccordionSummary expandIcon={props.expandIcon}>
@@ -128,15 +184,26 @@ export const NewTransaction = (props) => {
       </AccordionSummary>
       <AccordionDetails className={classes.newTransaction}>
         <FormControl>
-          <TextField placeholder="Amount" />
+          <TextField
+            type="number"
+            placeholder="Amount"
+            onChange={handleAmountChange}
+          />
         </FormControl>
-        <FormControl>
-          <InputLabel>Account</InputLabel>
-          <Select children={accountList} />
-        </FormControl>
+        <AccountSelector
+          name="accountId"
+          value={accountId}
+          accounts={props.accounts}
+          onChange={handleAccountChange}
+        />
+        <CurrencySelector
+          name="currencyId"
+          value={currencyId}
+          onChange={handleCurrencyChange}
+        />
       </AccordionDetails>
       <AccordionActions>
-        <Button>Save</Button>
+        <Button onClick={handleClick}>Add</Button>
       </AccordionActions>
     </Accordion>
   );
@@ -152,13 +219,15 @@ export const TransactionsDayView = (props) => {
             <Grid item xl={12}>
               <Typography>Incomes</Typography>
             </Grid>
-            <Grid item xl={3}>
+            <Grid item xl={4}>
               {props.transactions.map((transaction) =>
                 transaction.amount >= 0 ? (
                   <Transaction
                     key={transaction.id}
                     transaction={transaction}
                     accounts={props.accounts}
+                    updateTransaction={props.updateTransaction}
+                    removeTransaction={props.removeTransaction}
                   />
                 ) : (
                   ""
@@ -188,6 +257,8 @@ export const TransactionsDayView = (props) => {
                     key={transaction.id}
                     transaction={transaction}
                     accounts={props.accounts}
+                    updateTransaction={props.updateTransaction}
+                    removeTransaction={props.removeTransaction}
                   />
                 ) : (
                   ""
@@ -199,6 +270,7 @@ export const TransactionsDayView = (props) => {
                 expandIcon={<RemoveIcon />}
                 addTransaction={props.addTransaction}
                 accounts={props.accounts}
+                expense
               />
             </Grid>
           </Grid>
