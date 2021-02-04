@@ -31,6 +31,7 @@ export default class AccountData {
     return AccountData.currencySymbols.get(currency);
   }
 
+  // TODO: more readable parameters
   editAccount(changedValues) {
     for (const [key, value] of Object.entries(changedValues)) {
       this[key] = value;

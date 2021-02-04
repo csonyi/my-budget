@@ -10,6 +10,7 @@ import Transactions from "./components/Transactions";
 
 import AccountData from "./datamodels/account-model";
 import TransactionData from "./datamodels/transaction-model";
+import CurrencyHandler from "./datamodels/currency-model";
 
 const localStorageKey = "my-budget-state";
 const defaultState = {
@@ -24,6 +25,7 @@ const defaultState = {
   ],
   drawerOpen: false,
 };
+const currencyHandler = new CurrencyHandler();
 
 const styles = (theme) => ({
   content: {
@@ -46,6 +48,7 @@ class MyBudget extends React.Component {
     this.state = locallySavedState || defaultState;
   }
 
+  // TODO: Move balance to its own component
   updateState(newState) {
     this.setState(newState, () => {
       localStorage.setItem(localStorageKey, JSON.stringify(this.state));

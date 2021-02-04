@@ -9,7 +9,7 @@ export default class TransactionData {
     this.completed = completed;
     this.date = date;
   }
-
+  // TODO: more readable parameters
   editTransaction(changedValues) {
     for (const [key, value] of Object.entries(changedValues)) {
       this[key] = value;

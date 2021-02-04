@@ -128,7 +128,7 @@ export const NewTransaction = (props) => {
       </AccordionSummary>
       <AccordionDetails className={classes.newTransaction}>
         <FormControl>
-          <TextField placeholder="Amount" id="new-tra-amount" />
+          <TextField placeholder="Amount" />
         </FormControl>
         <FormControl>
           <InputLabel>Account</InputLabel>
@@ -156,6 +156,7 @@ export const TransactionsDayView = (props) => {
               {props.transactions.map((transaction) =>
                 transaction.amount >= 0 ? (
                   <Transaction
+                    key={transaction.id}
                     transaction={transaction}
                     accounts={props.accounts}
                   />
@@ -183,7 +184,11 @@ export const TransactionsDayView = (props) => {
             <Grid item xl={3}>
               {props.transactions.map((transaction) =>
                 transaction.amount < 0 ? (
-                  <Transaction transaction={transaction} />
+                  <Transaction
+                    key={transaction.id}
+                    transaction={transaction}
+                    accounts={props.accounts}
+                  />
                 ) : (
                   ""
                 )
