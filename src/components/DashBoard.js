@@ -117,7 +117,7 @@ export default function DashBoard(props) {
             <Typography variant="caption">by currency</Typography>
           </Grid>
           {currenciesInUse.map((currencyId) => (
-            <Grid key={currencyId} xs={2} item>
+            <Grid key={currencyId} sm={2} item>
               <Accordion>
                 <AccordionSummary>
                   {currencyHandler.formatCurrency(
@@ -138,7 +138,7 @@ export default function DashBoard(props) {
             <Typography variant="caption">by currency</Typography>
           </Grid>
           {currenciesInUse.map((currencyId) => (
-            <Grid key={currencyId} xs={2} item>
+            <Grid key={currencyId} sm={2} item>
               <Accordion>
                 <AccordionSummary>
                   {currencyHandler.formatCurrency(
