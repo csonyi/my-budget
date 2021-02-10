@@ -10,7 +10,6 @@ import {
 } from "@material-ui/core";
 
 import CurrencyHandler from "../datamodels/currency-model";
-const currencyHandler = CurrencyHandler.instance;
 
 const useStyles = makeStyles(() => ({
   selectField: {
@@ -20,15 +19,16 @@ const useStyles = makeStyles(() => ({
 }));
 
 const CurrencySelector = (props) => {
+  const { name, value, onChange, currencyHandler } = props;
   const classes = useStyles();
   return (
     <FormControl>
       <InputLabel>Currency</InputLabel>
       <Select
         className={classes.selectField}
-        name={props.name}
-        value={props.value}
-        onChange={props.onChange}
+        name={name}
+        value={value}
+        onChange={onChange}
       >
         <MenuItem value="" />
         {Object.keys(currencyHandler.currencies).map((currency) => {
@@ -44,8 +44,11 @@ const CurrencySelector = (props) => {
   );
 };
 
-CurrencyHandler.propTypes = {
-  currencyId: PropTypes.string,
+CurrencySelector.propTypes = {
+  name: PropTypes.string,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
 };
 
 export default CurrencySelector;

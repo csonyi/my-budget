@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 import {
   FormControl,
@@ -7,6 +8,7 @@ import {
   MenuItem,
   Select,
 } from "@material-ui/core";
+import AccountData from "../datamodels/account-model";
 
 const useStyles = makeStyles(() => ({
   selectField: {
@@ -36,6 +38,13 @@ const AccountSelector = (props) => {
       </Select>
     </FormControl>
   );
+};
+
+AccountSelector.propTypes = {
+  name: PropTypes.string,
+  value: PropTypes.string,
+  accounts: PropTypes.arrayOf(PropTypes.instanceOf(AccountData)),
+  onChange: PropTypes.func,
 };
 
 export default AccountSelector;
