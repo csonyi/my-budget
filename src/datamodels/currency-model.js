@@ -1,63 +1,53 @@
-const apiBaseUrl = "https://free.currconv.com/api/v7/";
-const apiKey = "e234961b21c160643223";
-const localStorageCurrencyKey = "local-currencies";
+import { CurrencyService as CS } from "../services/currency-service";
 
 export default class CurrencyHandler {
-  static instance = new CurrencyHandler();
   constructor() {
-    this.currencies = {};
-    this.fetchAllCurrencies();
+    this.currencies = {
+      HUF: {
+        currencyName: "Hungarian Forint",
+        currencySymbol: "Ft",
+        id: "HUF",
+      },
+      EUR: {
+        currencyName: "Euro",
+        currencySymbol: "€",
+        id: "EUR",
+      },
+    };
   }
 
-  static async getRate(fromCurrency, toCurrency) {
-    const query =
-      encodeURIComponent(fromCurrency) +
-      "_" +
-      encodeURIComponent(toCurrency) +
-      "," +
-      encodeURIComponent(toCurrency) +
-      "_" +
-      encodeURIComponent(fromCurrency);
-    const url =
-      apiBaseUrl + "convert?q=" + query + "&compact=ultra&apiKey=" + apiKey;
-
-    const response = await fetch(url);
-    return await response.json();
+  async fetchAll(errorHandler) {
+    const currencies = await CS.getCurrencies(errorHandler);
+    this.currencies = currencies;
   }
 
-  async fetchAllCurrencies() {
-    const localCurrencies = localStorage.getItem(localStorageCurrencyKey);
-    if (localCurrencies == null) {
-      console.log("Fetching currencies...");
-      const url = apiBaseUrl + "currencies?apiKey=" + apiKey;
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(data);
-      this.currencies = data.results;
-      localStorage.setItem(
-        localStorageCurrencyKey,
-        JSON.stringify(this.currencies)
-      );
-    } else {
-      this.currencies = JSON.parse(localCurrencies);
-    }
+  async convert(from, to, amount) {
+    const rate = await CS.getRate(from, to);
+    return amount * rate;
   }
 
   getCurrency(currencyId) {
+    console.log(currencyId, this.currencies);
     return this.currencies[currencyId];
   }
 
   getSymbol(currencyId) {
-    // console.log(currencyId);
-    const currencySymbol = this.currencies[currencyId].currencySymbol;
-    return currencySymbol ? currencySymbol : currencyId;
+    // console.log(this.currencies);
+    const currency = this.currencies[currencyId];
+    return currency ? currency.currencySymbol : currencyId;
   }
 
   getName(currencyId) {
-    return this.currencies[currencyId].currencyName;
+    return this.currencies[currencyId]
+      ? this.currencies[currencyId].currencyName
+      : currencyId;
   }
 
-  toString() {
-    return JSON.stringify(this);
+  formatCurrency(n, currencyId) {
+    const truncatedNumber =
+      Math.round((parseFloat(n) + Number.EPSILON) * 10000) / 10000;
+    return `${new Intl.NumberFormat("hu-HU").format(
+      truncatedNumber
+    )} ${this.getSymbol(currencyId)}`;
   }
 }
