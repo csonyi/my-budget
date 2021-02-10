@@ -9,9 +9,9 @@ export default class TransactionData {
     date = Date.now(),
     id = uuid()
   ) {
-    this.amount = amount;
-    this.currencyId = currencyId;
+    this.amount = parseFloat(amount);
     this.accountId = accountId;
+    this.currencyId = currencyId;
     this.completed = completed;
     this.date = date;
     this.id = id;
@@ -28,9 +28,8 @@ export default class TransactionData {
     );
   }
 
-  // TODO: more readable parameters
-  editTransaction(changedValues) {
-    for (const [key, value] of Object.entries(changedValues)) {
+  editTransaction(changedValuesObject) {
+    for (const [key, value] of Object.entries(changedValuesObject)) {
       this[key] = value;
     }
   }
