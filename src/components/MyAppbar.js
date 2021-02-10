@@ -76,7 +76,6 @@ function MyAppBar(props) {
 }
 
 MyAppBar.propTypes = {
-  balances: PropTypes.arrayOf(PropTypes.string),
   onDrawerToggle: PropTypes.func,
   isDrawerOpen: PropTypes.bool,
 };
