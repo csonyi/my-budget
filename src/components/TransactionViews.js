@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 import {
   Accordion,
@@ -22,10 +23,10 @@ import RemoveIcon from "@material-ui/icons/Remove";
 
 import clsx from "clsx";
 
-import CurrencyHandler from "../datamodels/currency-model";
 import AccountSelector from "./AccountSelector";
 import CurrencySelector from "./CurrencySelector";
-const currencyHandler = CurrencyHandler.instance;
+import AccountData from "../datamodels/account-model";
+import TransactionData from "../datamodels/transaction-model";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -41,16 +42,67 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
   },
+  transaction: {
+    minWidth: "320px",
+  },
+  inputField: {
+    maxWidth: "250px",
+  },
 }));
+
+const TransactionLabel = (props) => {
+  const { editMode, amount, transaction, currencyHandler } = props;
+  const sign = transaction.amount >= 0 ? "+" : "";
+  const account = AccountData.getAccountById(
+    transaction.accountId,
+    props.accounts
+  );
+  const conversionNeeded = transaction.currencyId !== account.currencyId;
+  const amountText =
+    sign +
+    currencyHandler.formatCurrency(transaction.amount, transaction.currencyId);
+  const [convertedAmount, setConvertedAmount] = React.useState("");
+  React.useEffect(() => {
+    if (conversionNeeded) {
+      currencyHandler
+        .convert(transaction.currencyId, account.currencyId, amount)
+        .then((data) => {
+          setConvertedAmount(data);
+        });
+    }
+  });
+  const conversionText = conversionNeeded
+    ? currencyHandler.formatCurrency(convertedAmount, transaction.currencyId)
+    : "";
+  return editMode ? (
+    <TextField
+      type="number"
+      onChange={props.onChange}
+      onClick={(e) => e.stopPropagation()}
+      value={amount}
+    />
+  ) : (
+    <Grid container direction="row" spacing={1}>
+      <Grid item>
+        <Typography>{amountText}</Typography>
+      </Grid>
+      {conversionNeeded ? (
+        <Grid item>
+          <Typography variant="caption">{conversionText}</Typography>
+        </Grid>
+      ) : (
+        ""
+      )}
+    </Grid>
+  );
+};
 
 export const Transaction = (props) => {
   let transaction = props.transaction;
-  const transactionCurrency = currencyHandler.getCurrency(
-    transaction.currencyId
-  );
   const [editMode, setEditMode] = React.useState(false);
   const [checked, setChecked] = React.useState(transaction.completed);
   const [accountId, setAccountId] = React.useState(transaction.accountId);
+  const [currencyId, setCurrencyId] = React.useState(transaction.currencyId);
   const [amount, setAmount] = React.useState(transaction.amount);
   const classes = useStyles();
 
@@ -70,6 +122,7 @@ export const Transaction = (props) => {
     props.transaction.completed = !checked;
     setChecked(!checked);
     props.updateTransaction(transaction);
+    props.toggleTransactionCommited(props.transaction);
   };
 
   const handleAccountChange = (e) => {
@@ -84,10 +137,16 @@ export const Transaction = (props) => {
     props.updateTransaction(transaction);
   };
 
+  const handleCurrencyChange = (e) => {
+    setCurrencyId(e.target.value);
+    transaction.currencyId = e.target.value;
+    props.updateTransaction(transaction);
+  };
+
   return (
     <Accordion
       component="form"
-      className={clsx(classes.accordion, {
+      className={clsx(classes.transaction, {
         [amount >= 0]: classes.income,
         [amount < 0]: classes.expense,
       })}
@@ -98,30 +157,37 @@ export const Transaction = (props) => {
           onFocus={(e) => e.stopPropagation()}
           control={<Checkbox checked={checked} />}
           label={
-            editMode ? (
-              <TextField
-                type="number"
-                onChange={handleAmountChange}
-                onClick={(e) => e.stopPropagation()}
-                value={amount}
-              />
-            ) : (
-              (transaction.amount >= 0 ? "+" : "") +
-              transaction.amount +
-              " " +
-              currencyHandler.getSymbol(transaction.currencyId)
-            )
+            <TransactionLabel
+              editMode={editMode}
+              amount={amount}
+              transaction={transaction}
+              onChange={handleAmountChange}
+              accounts={props.accounts}
+              currencyHandler={props.currencyHandler}
+            />
           }
         />
       </AccordionSummary>
       <AccordionDetails>
         {editMode ? (
-          <AccountSelector
-            name="accountId"
-            value={accountId}
-            accounts={props.accounts}
-            onChange={handleAccountChange}
-          />
+          <Grid container direction="column">
+            <Grid item>
+              <AccountSelector
+                name="accountId"
+                value={accountId}
+                accounts={props.accounts}
+                onChange={handleAccountChange}
+              />
+            </Grid>
+            <Grid item>
+              <CurrencySelector
+                name="currencyId"
+                value={currencyId}
+                onChange={handleCurrencyChange}
+                currencyHandler={props.currencyHandler}
+              />
+            </Grid>
+          </Grid>
         ) : (
           <Grid container direction="column">
             <Grid item>
@@ -135,8 +201,7 @@ export const Transaction = (props) => {
             <Grid item>
               <Typography>
                 Currency:
-                {" " + transactionCurrency.currencyName} (
-                {transactionCurrency.id})
+                {" " + props.currencyHandler.getName(currencyId)} ({currencyId})
               </Typography>
             </Grid>
           </Grid>
@@ -185,6 +250,7 @@ export const NewTransaction = (props) => {
       <AccordionDetails className={classes.newTransaction}>
         <FormControl>
           <TextField
+            className={classes.inputField}
             type="number"
             placeholder="Amount"
             onChange={handleAmountChange}
@@ -200,6 +266,7 @@ export const NewTransaction = (props) => {
           name="currencyId"
           value={currencyId}
           onChange={handleCurrencyChange}
+          currencyHandler={props.currencyHandler}
         />
       </AccordionDetails>
       <AccordionActions>
@@ -228,6 +295,8 @@ export const TransactionsDayView = (props) => {
                     accounts={props.accounts}
                     updateTransaction={props.updateTransaction}
                     removeTransaction={props.removeTransaction}
+                    currencyHandler={props.currencyHandler}
+                    toggleTransactionCommited={props.toggleTransactionCommited}
                   />
                 ) : (
                   ""
@@ -239,6 +308,7 @@ export const TransactionsDayView = (props) => {
                 expandIcon={<AddIcon />}
                 addTransaction={props.addTransaction}
                 accounts={props.accounts}
+                currencyHandler={props.currencyHandler}
               />
             </Grid>
           </Grid>
@@ -259,6 +329,8 @@ export const TransactionsDayView = (props) => {
                     accounts={props.accounts}
                     updateTransaction={props.updateTransaction}
                     removeTransaction={props.removeTransaction}
+                    currencyHandler={props.currencyHandler}
+                    toggleTransactionCommited={props.toggleTransactionCommited}
                   />
                 ) : (
                   ""
@@ -270,6 +342,7 @@ export const TransactionsDayView = (props) => {
                 expandIcon={<RemoveIcon />}
                 addTransaction={props.addTransaction}
                 accounts={props.accounts}
+                currencyHandler={props.currencyHandler}
                 expense
               />
             </Grid>
@@ -282,4 +355,40 @@ export const TransactionsDayView = (props) => {
 
 export const TransactionsWeekView = (props) => {
   return "";
+};
+
+TransactionsDayView.propTypes = {
+  transactions: PropTypes.arrayOf(TransactionData),
+  addTransaction: PropTypes.func,
+  updateTransaction: PropTypes.func,
+  removeTransaction: PropTypes.func,
+  accounts: PropTypes.arrayOf(AccountData),
+  toggleTransactionCommited: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+Transaction.propTypes = {
+  key: PropTypes.string,
+  transaction: PropTypes.instanceOf(TransactionData),
+  accounts: PropTypes.arrayOf(PropTypes.instanceOf(AccountData)),
+  updateTransaction: PropTypes.func,
+  removeTransaction: PropTypes.func,
+  toggleTransactionCommited: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+TransactionLabel.propTypes = {
+  editMode: PropTypes.bool,
+  amount: PropTypes.number,
+  transaction: PropTypes.instanceOf(TransactionData),
+  onChange: PropTypes.func,
+  accounts: PropTypes.arrayOf(PropTypes.instanceOf(AccountData)),
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+NewTransaction.propTypes = {
+  expandIcon: PropTypes.string,
+  addTransaction: PropTypes.func,
+  accounts: PropTypes.arrayOf(PropTypes.instanceOf(AccountData)),
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
 };
