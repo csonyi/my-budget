@@ -27,6 +27,7 @@ import AccountSelector from "./AccountSelector";
 import CurrencySelector from "./CurrencySelector";
 import AccountData from "../datamodels/account-model";
 import TransactionData from "../datamodels/transaction-model";
+import CurrencyHandler from "../datamodels/currency-model";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
