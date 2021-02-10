@@ -13,6 +13,7 @@ import { NIL as defaultId } from "uuid";
 import CurrencySelector from "./CurrencySelector";
 
 import CurrencyHandler from "../datamodels/currency-model";
+import AccountData from "../datamodels/account-model";
 const currencyHandler = CurrencyHandler.instance;
 
 const cardStyle = {
@@ -22,11 +23,16 @@ const cardStyle = {
 class Account extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { editMode: false };
+    this.state = {
+      editMode: false,
+      account: {
+        ...props.account,
+      },
+    };
   }
 
   AccountContent = (props) => {
-    let { name, balance, currencyId } = this.props.accountData;
+    let { name, balance, currencyId } = this.state.account;
     return this.state.editMode ? (
       <Grid container component="form" direction="column">
         <Grid item xs={12}>
@@ -50,42 +56,48 @@ class Account extends React.Component {
             name="currencyId"
             value={currencyId}
             onChange={this.handleChange}
+            currencyHandler={props.currencyHandler}
           />
         </Grid>
       </Grid>
     ) : (
-      balance + " " + currencyHandler.getSymbol(currencyId)
+      props.currencyHandler.formatCurrency(balance, currencyId)
     );
   };
 
   handleChange = (e) => {
     const updatedAccount = {
-      ...this.props.accountData,
+      ...this.state.account,
       [e.target.name]: e.target.value,
     };
+    this.setState({
+      account: updatedAccount,
+    });
     this.props.updateAccount(updatedAccount);
   };
 
   handleEdit = (e) => {
-    if (this.state.editMode) this.props.updateAccount(this.props.accountData);
+    if (this.state.editMode) this.props.updateAccount(this.props.account);
     this.setState(() => ({
       editMode: !this.state.editMode,
     }));
   };
 
   render() {
-    let { id, name, balance, currencyId } = this.props.accountData;
+    let { id, name, currencyId } = this.state.account;
     return (
       <Card raised style={cardStyle}>
         <CardHeader
           title={this.state.editMode ? "Edit Account" : name}
           subheader={
-            this.state.editMode ? "" : currencyHandler.getName(currencyId)
+            this.state.editMode
+              ? ""
+              : this.props.currencyHandler.getName(currencyId)
           }
           color="primary"
         />
         <CardContent component="h1">
-          <this.AccountContent updateAccount={this.props.updateAccount} />
+          <this.AccountContent currencyHandler={this.props.currencyHandler} />
         </CardContent>
         <CardActions>
           <Button onClick={this.handleEdit}>
@@ -168,6 +180,7 @@ class NewAccount extends React.Component {
                 name="currencyId"
                 value={this.state.currencyId}
                 onChange={this.handleChange}
+                currencyHandler={this.props.currencyHandler}
               />
             </Grid>
           </Grid>
@@ -180,24 +193,50 @@ class NewAccount extends React.Component {
   }
 }
 
-export default function Accounts(props) {
+function Accounts(props) {
   const accounts = props.accounts;
   return (
     <React.Fragment>
       <Grid container spacing={2}>
-        {accounts.map((acc) => (
-          <Grid key={acc.id} item xs={12} sm={6} md={3} lg={2}>
+        {accounts.map((account) => (
+          <Grid key={account.id} item xs={12} sm={6} md={3} lg={2}>
             <Account
-              accountData={acc}
+              account={account}
               removeAccount={props.removeAccount}
               updateAccount={props.updateAccount}
+              currencyHandler={props.currencyHandler}
             />
           </Grid>
         ))}
         <Grid item xs={12} sm={6} md={3} lg={2}>
-          <NewAccount addAccount={props.addAccount} />
+          <NewAccount
+            addAccount={props.addAccount}
+            currencyHandler={props.currencyHandler}
+          />
         </Grid>
       </Grid>
     </React.Fragment>
   );
 }
+
+Accounts.propTypes = {
+  accounts: PropTypes.arrayOf(PropTypes.instanceOf(AccountData)),
+  addAccount: PropTypes.func,
+  removeAccount: PropTypes.func,
+  updateAccount: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+Account.propTypes = {
+  account: PropTypes.instanceOf(AccountData),
+  removeAccount: PropTypes.func,
+  updateAccount: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+NewAccount.propTypes = {
+  addAccount: PropTypes.func,
+  currencyHandler: PropTypes.instanceOf(CurrencyHandler),
+};
+
+export default Accounts;
