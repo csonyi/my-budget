@@ -1,70 +1,66 @@
-# Getting Started with Create React App
+# MyBudget
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Budget handling app created with React and MaterialUI.
 
-## Available Scripts
+## Goal of the project
 
-In the project directory, you can run:
+understand a basic building blocks of a React app and demonstrate it in a practice.
+making tests are not part of the requirements due to keep the scope focused
 
-### `yarn start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+These are the applications current capabilties.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Accounts
 
-### `yarn test`
+You are able to create, delete and modify several accouts, wich can represent your real-life ways of keeping your money.
+Each account has a name, an initial balance and a currency associated with it.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Transactions
 
-### `yarn build`
+You can create any number of transactions associated with your accounts. A transaction needs an amount, an account and a currency.
+If the transaction's currency differs from the account's, you can see the transactions value in the accounts native currency next to the actual amount.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+After creating a transaction, you can see that it has a checkmark next to it. Checking it will mark the transaction as "completed".
+This way you can plan your incomes and expenses before they actually happen.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Marking a transaction "completed" will deduct it from the account associated with it, unmarking it will reverse this.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Dashboard
 
-### `yarn eject`
+On the Dashboard you can see your current and projected balances by currency.
+Your balances are basically the sums of your account balances, and the projected balances are where you will be once all of your planned transactions are marked completed.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Other dependencies used:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- clsx - for easier class definitions
+- uuid - a lightweight unique ID generator
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Starting the application
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+After cloning the repository, you have to first run `npm install` and then you can start the application by running `npm start` (both in the root directory).
 
-## Learn More
+## Original requirements
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- choose a tech stack (React, MaterialUI)
+- budget planning app
+  - fetching currency data from 3rd party API
+  - logging incomes/expenses
+    - properties
+      - income / expense
+      - planned / completed
+      - amount, currency
+      - affected account
+  - account handling
+    - CRUD
+    - properties: name, currency, balance
+  - several pages with frontend routing
+    - accounts
+    - transactions
+    - dashboard
+  - saving to localstorage
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Planned, but not comleted
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- category handling
+  - creating, editing and deleting categories
